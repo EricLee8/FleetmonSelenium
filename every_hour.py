@@ -76,33 +76,22 @@ def fetch_data_from_raw_html(html):
 def parse_port_info(port_info):
     rows = port_info.find_all("tr")
     rtvDict = dict()
-    for idx, row in enumerate(rows):
+    for row in rows:
         cols = row.find_all("td")
-        if idx not in [3, 4, 5]:
-            try:
-                keyList = [x.replace(':', '') for x in list(map(lambda s: s.strip(), list(cols[0].strings))) if x != '']
-                key = keyList[0] if len(keyList) > 0 else ''
-                key = key.replace(')','').replace('(','').replace(' ', '_')
-            except:
-                key = 'Uknown'
-            try:
-                valueList = [x for x in list(map(lambda s: s.strip(), list(cols[1].strings))) if x != '']
-                value = valueList[0] if len(valueList) > 0 else ''
-                rtvDict[key] = value
-            except:
-                rtvDict[key] = None
-        else:
-            try:
-                keyList = [x.replace(':', '') for x in list(map(lambda s: s.strip(), list(cols[0].strings))) if x != '']
-                key = keyList[0] if len(keyList) > 0 else ''
-                key = key.replace(')', '').replace('(', '').replace(' ', '_')
-            except:
-                key = 'Uknown'
-            try:
-                if idx == 3:
-                    value = cols[1].find(class_="port-usage tooltip-bs").attrs['title'].split(" ")[-1]
-                    rtvDict[key] = value
-                elif idx == 4:
+        try:
+            keyList = [x.replace(':', '') for x in list(map(lambda s: s.strip(), list(cols[0].strings))) if x != '']
+            key = keyList[0] if len(keyList) > 0 else ''
+            key = key.replace(')','').replace('(','').replace(' ', '_')
+        except:
+            key = 'Unknown'
+        if key in ['LOCODE_UNCTAD', 'Local_Time', 'Port_Activity_Index', 'Port_Usage', 'Tide']:
+            if key == 'Port_Activity_Index':
+                try:
+                    value = int(cols[1].find(class_="port-usage tooltip-bs").attrs['title'].split(" ")[-1])
+                except:
+                    value = None
+            elif key == 'Port_Usage':
+                try:
                     value = dict()
                     usages = cols[1].find(class_="port-usage").contents
                     for usage in usages:
@@ -113,9 +102,15 @@ def parse_port_info(port_info):
                             value[usg_key] = usg_value
                         except:
                             pass
-                    rtvDict[key] = value
-            except:
-                rtvDict[key] = None
+                except:
+                    value = dict()
+            else:
+                try:
+                    valueList = [x for x in list(map(lambda s: s.strip(), list(cols[1].strings))) if x != '']
+                    value = valueList[0] if len(valueList) > 0 else ''
+                except:
+                    value = None
+            rtvDict[key] = value  
     return rtvDict
 
 
