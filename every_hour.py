@@ -110,7 +110,7 @@ def parse_port_info(port_info):
                     value = valueList[0] if len(valueList) > 0 else ''
                 except:
                     value = None
-            rtvDict[key] = value  
+            rtvDict[key] = value
     return rtvDict
 
 
@@ -210,24 +210,30 @@ def get_data(url):
 
 
 def get_data_from_urlList(urls: list):
-    dump_f = open("ports.json", "a")
     urls.sort(reverse=True)
     for url_tuple in urls:
         url = url_tuple[1] # 0下标是vessel_num
         num_retry = 0
         rtvd = dict()
         time.sleep(random.random())
+        thread_name = threading.current_thread().name
         while num_retry < MAX_RETRY:
             try:
                 rtvd = get_data(url)
                 break
             except BaseException as e:
-                print(threading.current_thread().name + ": " + e)
-                print(threading.current_thread().name + ": " + "Maximum retry exceeded...")
+                print(get_time() + ": " + thread_name + ": " + "Error occured: ")
+                print(e)
                 rtvd = {"Info": "Unknown"}
                 num_retry += 1
+                print("Retrying for " + str(num_retry) + " times...")
+        if num_retry == MAX_RETRY:
+            print(get_time() + ": " + thread_name + ": " + "Failed: Maximum retry exceeded...")
+        time.sleep(random.random()*3)
         print(threading.current_thread().name + ": " + get_time() + ": Writing to file " + url + ' ...')
+        dump_f = open("ports.json", "a")
         dump_f.write(json.dumps(rtvd) + '\n')
+        dump_f.close()
 
 
 def get_one_round():
@@ -246,6 +252,7 @@ def get_one_round():
         p.start()
     for p in threads:
         p.join()
+    print(get_time() + ": All " + str(len(urlList)) + " urls done!!!")
 
 
 def timer_task():
