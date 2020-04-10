@@ -232,7 +232,10 @@ def get_data_from_urlList(urls: list):
         time.sleep(random.random()*3)
         print(threading.current_thread().name + ": " + get_time() + ": Writing to file " + url + ' ...')
         dump_f = open("ports.json", "a")
-        dump_f.write(json.dumps(rtvd) + '\n')
+        try:
+            dump_f.write(json.dumps(rtvd) + '\n')
+        except:
+            pass
         dump_f.close()
 
 
@@ -240,7 +243,14 @@ def get_one_round():
     print("============================================================================================")
     print(get_time() + ": Starting a round!!!")
     print("============================================================================================")
-    urlList = get_urls()
+    url_retry = 0
+    while url_retry < MAX_RETRY:
+        try:
+            urlList = get_urls()
+            break
+        except BaseException as e:
+            print(get_time() + ": Error occured when getting url list, retry for " + str(url_retry) + " times...")
+            url_retry += 1
     threads = []
     sorted_groups = [[] for _ in range(ThreadNum)]
     for idx, url_tuple in enumerate(urlList):
